@@ -170,7 +170,8 @@ foreign import add :: Long -> Fn1 Long Long
 -- | Returns the bitwise AND of this Long and the specified.
 foreign import and :: Long -> Fn1 Long Long
 
--- | Compares this Long's value with the specified's. Returns 0 if they are the same, 1 if the this is greater and -1 if the given one is greater.
+-- | Compares this Long's value with the specified's. Returns 0 if they are the same,
+-- 1 if the this is greater and -1 if the given one is greater.
 foreign import compare :: Long -> Fn1 Long Int
 
 -- | Returns this Long divided by the specified.

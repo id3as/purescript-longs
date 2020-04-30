@@ -1,56 +1,55 @@
 -module(data_long_FFI@foreign).
 
--export([ add/1
-        , 'and'/1
-        , compare
-        , divide/1
-        , equals/1
-        , divide/1
-        , equals/1
+-export([ add/2
+        , 'and'/2
+        , compare/2
+        , divide/2
+        , equals/2
         , getHighBits/1
         , getHighBitsUnsigned/1
         , getLowBits/1
         , getLowBitsUnsigned/1
         , getNumBitsAbs/1
-        , greaterThan/1
-        , greaterThanOrEqual/1
+        , greaterThan/2
+        , greaterThanOrEqual/2
         , isEven/1
-        , idOdd/1
+        , isOdd/1
         , isPositive/1
         , isZero/1
-        , lessThan/1
-        , lessThanOrEqual/1
-        , modulo/1
-        , multiply/1
+        , lessThan/2
+        , lessThanOrEqual/2
+        , modulo/2
+        , multiply/2
         , negate/1
         , 'not'/1
-        , notEquals/1
-        , 'or'/1
-        , shiftLeft/1
-        , shiftRight/1
-        , shiftRightUnsigned/1
-        , rotateLeft/1
-        , rotateRight/1
-        , subtract /1
-        , toBytes/1
+        , notEquals/2
+        , 'or'/2
+        , shiftLeft/2
+        , shiftRight/2
+        , shiftRightUnsigned/2
+        , rotateLeft/2
+        , rotateRight/2
+        , subtract /2
+        , toBytes/2
         , toInt/1
         , toNumber/1
         , toSigned/1
-        , toString/1
+        , toString/2
         , toUnsigned/1
-        , 'xor'/1
+        , 'xor'/2
         ]
-  )
+  ).
 
-add(A) -> fun(B) -> A + B end.
-and(A) -> fun(B) -> A band B end.
-compare(A) -> fun(B) when A > B -> 1;
-                 (B) when A == B -> 0;
-                 (_) -> -1
-              end.
+add(A, B) -> A + B.
 
-divide(A) -> fun(B) -> A div B end.
-equals(A) -> fun(B) -> A == B end.
+'and'(A, B) -> A band B.
+
+compare(A, B) when A > B -> 1;
+compare(A, B) when A == B -> 0;
+compare(_, _) -> -1.
+
+divide(A, B) -> A div B.
+equals(A, B) -> A == B.
 
 getHighBits(A) -> A bsr 32.
 
@@ -66,36 +65,35 @@ getNumBitsAbs(A) -> getNumBitsAbs(A, 0).
 getNumBitsAbs(A, N) when A == 0 -> N;
 getNumBitsAbs(A, N) -> getNumBitsAbs(A bsr 1, N + 1).
 
-greaterThan(A) -> fun(B) -> A > B end.
-greaterThanOrEqual(A) -> fun(B) -> A >= B end.
+greaterThan(A, B) -> A > B.
+greaterThanOrEqual(A, B) -> A >= B.
 isEven(A) when A >= 0 -> (A band 1) == 0.
 isOdd(A) when A > 0 -> not isEven(A).
 isPositive(A) -> A > 0.
 isZero(A) -> A == 0.
-lessThan(A) -> fun(B) -> A < B end.
-lessThanOrEqual(A) -> fun(B) -> A =< B end.
-modulo(A) -> fun(B) -> A rem B end.
-multiply(A) -> fun(B) -> A * B end.
+lessThan(A, B) -> A < B.
+lessThanOrEqual(A, B) -> A =< B.
+modulo(A, B) -> A rem B.
+multiply(A, B) -> A * B.
 negate(A) -> -A.
-not(A) -> bnot A.
-notEquals(A) -> fun(B) -> A /= B end.
-or(A) -> fun(B) -> A bor B end.
-shiftLeft(A) -> fun(B) -> A bsl B end.
-shiftRight(A) -> fun(B) -> A bsr B end.
+'not'(A) -> bnot A.
+notEquals(A, B) -> A /= B.
+'or'(A, B) -> A bor B.
+shiftLeft(A, B) -> A bsl B.
+shiftRight(A, B) -> A bsr B.
 
-shiftRightUnsigned(A) -> fun(B) -> A bsr B end.
+shiftRightUnsigned(A, B) -> A bsr B.
 
-rotateLeft(A) -> fun(Num) ->
-  ((A bsl Num) band 16#ffffffffffffffff) bor (A bsr (64 - Num)) end.
+rotateLeft(A, Num) ->
+  ((A bsl Num) band 16#ffffffffffffffff) bor (A bsr (64 - Num)).
 
-rotateRight(A) -> fun(Num) ->
-  (A bsr Num) bor ((A bsl (64 - Num)) band 16#ffffffffffffffff) end.
+rotateRight(A, Num) ->
+  (A bsr Num) bor ((A bsl (64 - Num)) band 16#ffffffffffffffff).
 
-subtract(A) -> fun(B) -> A - B end.
+subtract(A, B) -> A - B.
 
-toBytes(A) -> fun(true) -> array:from_list (binary_to_list(<<A:64/little-integer>>));
-                 (false) -> array:from_list (binary_to_list(<<A:64/big-integer>>))
-              end.
+toBytes(A, true) -> array:from_list (binary_to_list(<<A:64/little-integer>>));
+toBytes(A, false) -> array:from_list (binary_to_list(<<A:64/big-integer>>)).
 
 toInt(A) -> A band 16#ffffffff.
 
@@ -103,8 +101,8 @@ toNumber(A) -> A * 1.0.
 
 toSigned(A) -> A.
 
-toString(A) -> fun(R) -> integer_to_binary (A, R) end.
+toString(A, R) -> integer_to_binary (A, R).
 
 toUnsigned(A) -> A.
 
-xor(A) -> fun(B) -> A bxor B end.
+'xor'(A, B) -> A bxor B.

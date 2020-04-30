@@ -1,13 +1,18 @@
 -module(data_long_Internals@foreign).
 
 -export([ numberBitsToInt/1
-        , safeReadLong/1
-        , numberBitsToInt/1
+        , '_safeReadLong'/3
         , isWholeNumber/1
-         ]
-  )
+        ]
+  ).
 
-numberBitsToInt(A) -> .
-safeReadLong_() -> fun(A) -> fun(B) -> fun(c) -> A B C end end end.
 numberBitsToInt(A) -> A.
-isWholeNumber(A) -> fun(B) -> A / B end.
+
+'_safeReadLong'(S, _IsUnsigned, Radix) ->
+  try
+    binary_to_integer (S, Radix)
+  catch
+    error:badarg -> null
+  end.
+
+isWholeNumber(A) -> A == trunc(A).
