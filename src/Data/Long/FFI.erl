@@ -1,8 +1,6 @@
 -module(data_long_FFI@foreign).
 
--export([
-        %% Constants
-          zero/0
+-export([ zero/0
         , one/0
         , negOne/0
         , uzero/0
@@ -10,54 +8,54 @@
         , maxValue/0
         , maxUnsignedValue/0
         , minValue/0
-        %% Utilities
-        , isLong/1
-        , fromBits/2
-        , fromBytes/2
-        , fromBytesLE/1
-        , fromBytesBE/1
-        , fromInt/1
-        , fromNumber/1
-        , fromString/1
-        , fromValue/1
-         %% Methods
-        , add/2
-        , 'and'/2
-        , compare/2
-        , divide/2
-        , equals/2
+        , isLong/0
+        , fromBits/0
+        , fromBytes/0
+        , fromBytesLE/0
+        , fromBytesBE/0
+        , fromInt/0
+        , fromNumber/0
+        , fromString/0
+        , fromValue/0
+        , unsigned/1
+        , add/0
+        , 'and'/0
+        , compare/0
+        , divide/0
+        , equals/0
         , getHighBits/1
         , getHighBitsUnsigned/1
         , getLowBits/1
         , getLowBitsUnsigned/1
         , getNumBitsAbs/1
-        , greaterThan/2
-        , greaterThanOrEqual/2
+        , greaterThan/0
+        , greaterThanOrEqual/0
         , isEven/1
         , isOdd/1
         , isPositive/1
+        , isNegative/1
         , isZero/1
-        , lessThan/2
-        , lessThanOrEqual/2
-        , modulo/2
-        , multiply/2
+        , lessThan/0
+        , lessThanOrEqual/0
+        , modulo/0
+        , multiply/0
         , negate/1
         , 'not'/1
-        , notEquals/2
-        , 'or'/2
-        , shiftLeft/2
-        , shiftRight/2
-        , shiftRightUnsigned/2
-        , rotateLeft/2
-        , rotateRight/2
-        , subtract /2
-        , toBytes/2
+        , notEquals/0
+        , 'or'/0
+        , shiftLeft/0
+        , shiftRight/0
+        , shiftRightUnsigned/0
+        , rotateLeft/0
+        , rotateRight/0
+        , subtract /0
+        , toBytes/0
         , toInt/1
         , toNumber/1
         , toSigned/1
-        , toString/2
+        , toString/0
         , toUnsigned/1
-        , 'xor'/2
+        , 'xor'/0
         ]).
 
 
@@ -78,7 +76,7 @@ minValue() -> fromBits(0, 16#ffffffff).
 %% }
 isLong(A) -> A.
 
-fromBits(Low, High) -> (High bsl 32) band Low.
+fromBits(Low, High, _A) -> (High bsl 32) band Low.
 
 
 %% Long.fromBytes = function fromBytes(bytes, unsigned, le) {
@@ -100,7 +98,7 @@ fromBytes(A, _B) -> A.
 %%     );
 %% };
 %% Creates a Long from its little endian byte representation.
-fromBytesLE(A) -> A.
+fromBytesLE(A, _B) -> A.
 
 %% Long.fromBytesBE = function fromBytesBE(bytes, unsigned) {
 %%     return new Long(
@@ -116,15 +114,17 @@ fromBytesLE(A) -> A.
 %%     );
 %% };
 %% Creates a Long from its big endian byte representation.
-fromBytesBE(A) -> A.
+fromBytesBE(A, _B, _C) -> A.
 
-fromInt(A) -> A.
+fromInt(A, _B) -> A.
 
-fromNumber(A) -> A.
+fromNumber(A, _B) -> A.
 
-fromString(A) -> A.
+fromString(A, _B, _C) -> A.
 
-fromValue(A) -> A.
+fromValue(A, _B) -> A.
+
+unsigned(A) -> A.
 
 %% Methods
 add(A, B) -> A + B.
@@ -148,6 +148,7 @@ greaterThanOrEqual(A, B) -> A >= B.
 isEven(A) when A >= 0 -> (A band 1) == 0.
 isOdd(A) when A > 0 -> not isEven(A).
 isPositive(A) -> A > 0.
+isNegative(A) -> A < 0.
 isZero(A) -> A == 0.
 lessThan(A, B) -> A < B.
 lessThanOrEqual(A, B) -> A =< B.
