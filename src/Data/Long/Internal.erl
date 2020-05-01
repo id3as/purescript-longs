@@ -1,4 +1,4 @@
--module(data_long_Internals@foreign).
+-module(data_long_Internal@foreign).
 
 -export([ numberBitsToInt/1
         , '_safeReadLong'/3
