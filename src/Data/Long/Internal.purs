@@ -53,7 +53,6 @@ import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Data.Ord (abs)
-import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
 
 foreign import kind Signedness
 
@@ -142,9 +141,6 @@ instance euclideanRingLong'Unsigned :: EuclideanRing (Long' Unsigned) where
   degree = Int.floor <<< toNumber <<< abs
   div = quot
   mod = rem
-
-instance arbitraryLong' :: SInfo s => Arbitrary (Long' s) where
-  arbitrary = fromLowHighBits <$> arbitrary <*> arbitrary
 
 -- Constructors
 
