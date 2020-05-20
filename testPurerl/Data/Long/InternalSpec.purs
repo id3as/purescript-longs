@@ -21,13 +21,13 @@ import Type.Proxy (Proxy(..))
 
 internalSpecPE :: TestSuite
 internalSpecPE = do
-  -- longSpec
+--  longSpec
   fromStringSpec
 
 -- longSpec :: Effect Unit
 -- longSpec = suite "Long" do
-  -- test "should follow laws" $ liftEffect do
-    -- checkEq prxSignedLong
+--  test "should follow laws" $ liftEffect do
+  --  checkEq prxSignedLong
     -- checkOrd prxSignedLong
     -- checkSemiring prxSignedLong
     -- checkRing prxSignedLong
