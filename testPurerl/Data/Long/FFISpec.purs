@@ -4,6 +4,8 @@ module Data.Long.FFISpecPE
 
 import Prelude
 
+import Control.Monad.Error.Class (class MonadError, class MonadThrow, throwError, try)
+import Data.Either (Either(..))
 import Data.Array as Array
 import Data.Function.Uncurried (runFn2, runFn3)
 import Data.Int (decimal)
@@ -11,8 +13,11 @@ import Data.Long.FFI (Long)
 import Data.Long.FFI as FFI
 import Data.Long.Internal as Internal
 import Data.Long.TestUtilsPE (i2lS, i2lU, isBigEndianV, isLittleEndianV, isSignedV, isUnsignedV, unsafeS2lS, unsafeS2lU)
+import Debug.Trace (spy)
+import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Uncurried (runEffectFn3)
+import Effect.Exception (Error, error)
 import Erl.Test.EUnit (TestSuite, suite, test)
 import Foreign (unsafeToForeign)
 import Test.Assert (assert)
@@ -39,8 +44,8 @@ ffiSpecPE = do
     assert $ (runFn2 FFI.fromInt 2 isSignedV) == (unsafeS2lS "2")
     assert $ (runFn2 FFI.fromNumber 2.0 isSignedV) == (unsafeS2lS "2")
     assert $ (runFn2 FFI.fromNumber 2.0 isSignedV) == (unsafeS2lS "2")
-    -- assert $ (liftEffect $ runEffectFn3 FFI.fromString "2" isSignedV decimal)
-      -- >>= (_ == (runFn2 FFI.fromInt 2 isSignedV))
+    assert =<< ( ((==) (runFn2 FFI.fromInt 2 isSignedV)) <$> runEffectFn3 FFI.fromString "2" isSignedV decimal)
+    expectError $ runEffectFn3 FFI.fromString "2-2" isSignedV decimal
 
   test "should access fields" do
     assert $ FFI.unsigned (i2lU 2) == isUnsignedV
@@ -55,20 +60,20 @@ ffiSpecPE = do
 
     assert $ (FFI.divide (i2lS 8) (i2lS 3)) == (i2lS 2)
     assert $ (Internal.numberBitsToInt $ FFI.getHighBits sampleS.value) == sampleS.high
-    assert $ (Internal.numberBitsToInt $ FFI.getHighBitsUnsigned sampleU.value) == sampleU.high
+    assert $ (Internal.numberBitsToInt $ (FFI.getHighBitsUnsigned sampleU.value)) == sampleU.high
     assert $ (Internal.numberBitsToInt $ FFI.getLowBits sampleS.value) == sampleS.low
     assert $ (Internal.numberBitsToInt $ FFI.getLowBitsUnsigned sampleU.value) == sampleU.low
-    -- assert $ (i2lS 5) `shouldSatisfy` (_ `FFI.greaterThan` (i2lS 2))
-    -- assert $ (i2lS 5) `shouldSatisfy` (_ `FFI.greaterThanOrEqual` (i2lS 5))
-    -- assert $ (i2lS 6) `shouldSatisfy` FFI.isEven
-    -- assert $ (i2lS (-6)) `shouldSatisfy` FFI.isNegative
-    -- assert $ (i2lS 5) `shouldSatisfy` FFI.isOdd
-    -- assert $ (i2lS 5) `shouldSatisfy` FFI.isPositive
-    -- assert $ FFI.zero `shouldSatisfy` FFI.isZero
-    -- assert $ assert $ (i2lS 2) `shouldSatisfy` (_ `FFI.lessThan` (i2lS 5))
-    -- assert $ (i2lS 5) `shouldSatisfy` (_ `FFI.lessThanOrEqual` (i2lS 5))
+    assert $ (_ `FFI.greaterThan` (i2lS 2)) (i2lS 5)
+    assert $ (_ `FFI.greaterThanOrEqual` (i2lS 5)) (i2lS 5)
+    assert $ FFI.isEven (i2lS 6)
+    assert $ FFI.isNegative (i2lS (-6))
+    assert $ FFI.isOdd (i2lS 5)
+    assert $ FFI.isPositive (i2lS 5)
+    assert $ FFI.isZero FFI.zero
+    assert $ (_ `FFI.lessThan` (i2lS 5)) (i2lS 2)
+    assert $ (_ `FFI.lessThanOrEqual` (i2lS 5)) (i2lS 5)
 
-    -- modulo, note the sign of the answers
+    -- -- modulo, note the sign of the answers
     assert $ (FFI.modulo (i2lS 5) (i2lS 3)) == (i2lS 2)
     assert $ (FFI.modulo (i2lS (-5)) (i2lS 3)) == (i2lS (-2))
     assert $ (FFI.modulo (i2lS 5) (i2lS (-3))) == (i2lS 2)
@@ -77,19 +82,19 @@ ffiSpecPE = do
     assert $ (FFI.multiply (i2lS 5) (i2lS 3)) == (i2lS 15)
     assert $ (FFI.negate (i2lS 5)) == (i2lS (-5))
     assert $ (FFI.not (i2lS (-12345))) == (i2lS 12344)
-    -- assert $ (i2lS 12344) `shouldSatisfy` (FFI.notEquals (i2lS (-12345)) )
+    assert $ (FFI.notEquals (i2lS (-12345)) (i2lS 12344) )
     assert $ (FFI.or (i2lS 11) (i2lS 5)) == (i2lS 15)
     assert $ (FFI.shiftLeft (i2lS 11) (i2lS 2)) == (i2lS 44)
     assert $ (FFI.shiftRight (i2lS (-11)) (i2lS 2)) == (i2lS (-3))
     assert $ (FFI.shiftRightUnsigned (unsafeS2lU "18446744073709551605") (i2lU 2)) == (unsafeS2lU "4611686018427387901")
-    -- TODO rotateLeft, i2lS 2 (FFI.subtract (i2lS 2) (i2lS 3)) == (i2lS -1)
+    -- -- TODO rotateLeft, i2lS 2 (FFI.subtract (i2lS 2) (i2lS 3)) == (i2lS -1)
     assert $ (FFI.toBytes sampleS.value isLittleEndianV) == sampleS.leBytes
     assert $ (FFI.toBytes sampleS.value isBigEndianV) == sampleS.beBytes
     assert $ (FFI.toInt (i2lS 2)) == 2
-    -- out of range gets clipped
+    -- -- out of range gets clipped
     assert $ (FFI.toInt (unsafeS2lS "100000000000")) == (Internal.numberBitsToInt 100000000000.0)
 
-    -- can lose precision when converting to number
+    -- -- can lose precision when converting to number
     assert $ (FFI.toNumber (unsafeS2lS "9007199254740993")) == 9007199254740992.0
 
     assert $ (FFI.toSigned (unsafeS2lU "18446744073709551605")) == (i2lS (-11))
@@ -125,3 +130,14 @@ sampleU =
   , high: -22
   , low: -34
   }
+
+expectError
+  :: forall m t
+   . MonadError Error m
+  => m t
+  -> m Unit
+expectError a = do
+  e <- try a
+  case e of
+    Left _ -> pure unit
+    Right _ -> throwError $ error "Expected error"

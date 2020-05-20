@@ -17,7 +17,7 @@
         , fromNumber/0
         , fromString/0
         , fromValue/0
-        , unsigned/1
+        , unsigned/0
         , add/1
         , 'and'/1
         , compare/1
@@ -65,66 +65,74 @@ one() -> 1.
 negOne() -> -1.
 uzero() -> 0.
 uone() -> 1.
-maxValue() -> (fromBits())(16#ffffffffffffffff, 16#ffffffff, true).
-maxUnsignedValue() -> (fromBits())(16#ffffffffffffffff, 16#ffffffff, false).
-minValue() -> (fromBits())(0, 16#ffffffff, true).
+maxValue() -> 16#7fffffffffffffff.
+maxUnsignedValue() -> 16#ffffffffffffffff.
+minValue() -> -16#8000000000000000.
 
-%% Utilities
-%% Object.defineProperty(Long.prototype, "__isLong__", { value: true });
-%% function isLong(obj) {
-%%     return (obj && obj["__isLong__"]) === true;
-%% }
-isLong() -> fun(A) -> A end.
+isLong() ->
+  fun(Num) when is_integer(Num),
+                Num =< 16#ffffffffffffffff ->
+      true;
+     (_) ->
+      false
+  end.
 
-fromBits() -> fun(Low, High, _A) -> (High bsl 32) band Low end.
+fromBits() ->
+  fun(Low, High, true) ->
+      <<X:64/little-unsigned-integer>> = <<Low:32/little-integer, High:32/little-integer>>,
+      X;
+     (Low, High, false) ->
+      <<X:64/little-signed-integer>> = <<Low:32/little-integer, High:32/little-integer>>,
+      X
+  end.
 
+fromBytes() ->
+  fun(Array, IsUnsigned, IsLittleEndian) ->
+      Bin = list_to_binary(array:to_list(Array)),
+      case {IsLittleEndian, IsUnsigned} of
+        {true, true} ->
+          <<X:64/little-unsigned-integer>> = Bin;
+        {true, false} ->
+          <<X:64/little-signed-integer>> = Bin;
+        {false, true} ->
+          <<X:64/big-unsigned-integer>> = Bin;
+        {false, false} ->
+          <<X:64/big-signed-integer>> = Bin
+      end,
+      X
+  end.
 
-%% Long.fromBytes = function fromBytes(bytes, unsigned, le) {
-%%     return le ? Long.fromBytesLE(bytes, unsigned) : Long.fromBytesBE(bytes, unsigned);
-%% };
-fromBytes() -> fun(A, _B, _C) -> A end.
-
-%% Long.fromBytesLE = function fromBytesLE(bytes, unsigned) {
-%%     return new Long(
-%%         bytes[0]       |
-%%         bytes[1] <<  8 |
-%%         bytes[2] << 16 |
-%%         bytes[3] << 24,
-%%         bytes[4]       |
-%%         bytes[5] <<  8 |
-%%         bytes[6] << 16 |
-%%         bytes[7] << 24,
-%%         unsigned
-%%     );
-%% };
 %% Creates a Long from its little endian byte representation.
-fromBytesLE() -> fun(A, _B, _C) -> A end.
+fromBytesLE() ->
+  fun(Array, IsUnsigned) ->
+      (fromBytes())(Array, IsUnsigned, true)
+  end.
 
-%% Long.fromBytesBE = function fromBytesBE(bytes, unsigned) {
-%%     return new Long(
-%%         bytes[4] << 24 |
-%%         bytes[5] << 16 |
-%%         bytes[6] <<  8 |
-%%         bytes[7],
-%%         bytes[0] << 24 |
-%%         bytes[1] << 16 |
-%%         bytes[2] <<  8 |
-%%         bytes[3],
-%%         unsigned
-%%     );
-%% };
 %% Creates a Long from its big endian byte representation.
-fromBytesBE() -> fun(A, _B, _C) -> A end.
+fromBytesBE() ->
+  fun(Array, IsUnsigned) ->
+      (fromBytes())(Array, IsUnsigned, false)
+  end.
 
-fromInt() -> fun(A, _B) -> A end.
+fromInt() -> fun(A, _IsUnsigned) -> A end.
 
-fromNumber() -> fun(A, _B) -> A end.
+fromNumber() -> fun(A, _IsUnsigned) -> trunc(A) end.
 
-fromString() -> fun(A, _B, _C) -> A end.
+fromString() ->
+  fun(String, _IsUnsigned, Radix) ->
+      binary_to_integer(String, Radix)
+  end.
 
-fromValue() -> fun(A, _B) -> A end.
+fromValue() ->
+  fun(A) when is_integer(A),
+              A < 16#ffffffffffffffff ->
+      A
+  end.
 
-unsigned(A) -> A.
+unsigned() ->
+  fun(A) when A < 0 -> false;
+     (_A) -> true
+  end.
 
 %% Methods
 add(A) -> fun(B) -> A + B end.
@@ -172,7 +180,9 @@ toBytes(A, false) -> array:from_list (binary_to_list(<<A:64/big-integer>>)).
 
 toInt(A) -> A band 16#ffffffff.
 toNumber(A) -> A * 1.0.
-toSigned(A) -> A.
+toSigned(A) when A =< 16#7fffffffffffffff -> A;
+toSigned(A) -> -1 * ((bnot (A band 16#fffffffffffffffe)) band 16#ffffffffffffffff).
 toString(A) -> fun(R) -> integer_to_binary (A, R) end.
-toUnsigned(A) -> A.
+toUnsigned(A) when A >= 0 -> A;
+toUnsigned(A) -> <<X:64/unsigned-integer>> = <<A:64/signed-integer>>, X.
 'xor'(A) -> fun(B) -> A bxor B end.

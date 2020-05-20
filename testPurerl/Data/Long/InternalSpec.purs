@@ -11,6 +11,7 @@ import Data.Long.Internal as Internal
 import Data.Maybe (Maybe(..), isJust, isNothing)
 import Data.Ord (abs)
 import Data.Traversable (traverse_)
+import Debug.Trace (spy)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Erl.Test.EUnit (TestSuite, suite, test)
@@ -162,7 +163,7 @@ fromStringSpec = do
     assert $ readSigned hexadecimal "-8000000000000000" == Just bottom
 
   test "should fail for overflows" do
-    assert $ isNothing $ readSigned decimal "9223372036854775808"
+    assert $ isNothing $ (spy "rhs" (readSigned decimal "9223372036854775808"))
     assert $ isNothing $ readSigned decimal "-9223372036854775809"
 
     assert $ isNothing $ readUnsigned decimal "18446744073709551616"

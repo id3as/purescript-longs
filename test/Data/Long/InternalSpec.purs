@@ -5,6 +5,7 @@ module Data.Long.InternalSpec
 import Prelude
 
 import Control.Monad.Gen (chooseInt)
+import Debug.Trace (spy)
 import Data.Int (Parity(..), Radix, binary, decimal, hexadecimal, octal, radix)
 import Data.Long.Internal (class SInfo, Long, Long', SignProxy(..), Signed, ULong, Unsigned)
 import Data.Long.Internal as Internal
